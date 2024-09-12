@@ -4,6 +4,9 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #else
+#include <stdint.h>
+#define HAVE_STDINT_H
+# include "config.h"
 # ifndef _GNU_SOURCE
 #  define _GNU_SOURCE
 # endif

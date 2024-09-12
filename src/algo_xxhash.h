@@ -2480,6 +2480,7 @@ static int XXH_isLittleEndian(void)
  * @return @p x, byteswapped.
  */
 #if defined(_MSC_VER)     /* Visual Studio */
+#include <stdlib.h>
 #  define XXH_swap32 _byteswap_ulong
 #elif XXH_GCC_VERSION >= 403
 #  define XXH_swap32 __builtin_bswap32

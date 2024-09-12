@@ -1,27 +1,69 @@
-cmake_minimum_required(VERSION 3.7.0 FATAL_ERROR)
+# LightTPD/CMakeLists.txt
+# Created by Robin Rowe 2024-09-11
+# License Open Source BSD License
 
-project(lighttpd VERSION 1.4.77 LANGUAGES C)
+cmake_minimum_required(VERSION 3.8)
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# use C11 with CMake >= 3.1
-set(CMAKE_C_STANDARD 11)
+project(LightTPD)
+message("Configuring ${CMAKE_PROJECT_NAME}...")
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake)
+if(NOT WIN32 AND NOT APPLE)
+	link_libraries(rt pthread)
+endif(NOT WIN32 AND NOT APPLE)
 
-include(CTest)
+option(SUPPRESS "Enable suppression of code warnings" false)
+if(SUPPRESS)
+	if(WIN32)
+		add_definitions(-D_CRT_SECURE_NO_WARNINGS /wd4244 /wd4305 /wd4018 /wd26451 /wd6031 /wd4267)
+	endif(WIN32)
+endif(SUPPRESS)
 
-enable_testing()
+option(UNISTD "Enable libunistd" true)
+if(UNISTD)
+	if(WIN32)
+#		message("CMAKE_GENERATOR_PLATFORM = ${CMAKE_GENERATOR_PLATFORM}")
+		set(LIBUNISTD_PATH /code/github/libunistd)
+		include_directories(${LIBUNISTD_PATH}/unistd)
+		set (UNISTD_LINK_DIRECTORIES ${LIBUNISTD_PATH}/build/${CMAKE_GENERATOR_PLATFORM}/Release)
+		message(libunistd = ${UNISTD_LINK_DIRECTORIES}/libunistd.lib)
+		link_directories(${UNISTD_LINK_DIRECTORIES})
+		link_libraries(libunistd Ws2_32 Imm32)
+	endif(WIN32)
+endif(UNISTD)
 
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README")
-set(CPACK_PACKAGE_VENDOR "jan@kneschke.de")
+option(FLTK "Enable FLTK" false)
+if(FLTK)
+	set(FLTK_PATH /Code/fltk)
+	include_directories(${FLTK_PATH} ${FLTK_PATH}/fltk-build ${FLTK_PATH}/fltk-src/)
+	link_directories(${FLTK_PATH}/fltk-src/build/lib/Debug)
+	set(FLTK_LIBS
+		fltk_formsd
+		fltk_gld
+		fltk_imagesd
+		fltk_jpegd
+		fltk_pngd
+		fltk_zd
+		fltkd
+	)
+	link_libraries(${FLTK_LIBS} comctl32)
+endif(FLTK)
 
-set(CPACK_SOURCE_GENERATOR "TGZ")
-set(CPACK_SOURCE_IGNORE_FILES "/\\\\.;~$;/_;build/;CMakeFiles/;CMakeCache;gz$;Makefile\\\\.;trace;Testing/;foo;autom4te;cmake_install;CPack;\\\\.pem;ltmain.sh;configure;libtool;/config\\\\.;missing;autogen.sh;install-sh;Dart;aclocal;log$;Makefile$")
-
-include(CPack)
-
-include(GNUInstallDirs)
-
-add_subdirectory(src build)
-add_subdirectory(doc)
-add_subdirectory(tests)
+option(GTK1 "Enable GTK1" false)
+if(GTK1)
+	set(GTK_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/gtk1/gtk1win)
+	set(GTK_INCLUDE_DIRS 
+		${GTK_INCLUDE_PATH}
+		${GTK_INCLUDE_PATH}/glib 
+		${GTK_INCLUDE_PATH}/gdk)
+	include_directories(${GTK_INCLUDE_DIRS})
+endif(GTK1)
+add_subdirectory(./src)
+# add_subdirectory(./src/compat)
+# add_subdirectory(./src/compat/sys)
+# add_subdirectory(./src/ls-hpack)
+# add_subdirectory(./src/t)
+# add_subdirectory(./tests)
